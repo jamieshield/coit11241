@@ -1,16 +1,22 @@
 #!/usr/bin/bash
-# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/i.sh | sudo bash -s - 2>&1 /var/log/cloud-init.log
+# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/i.sh | sudo bash -s -
 PASSWD="V1@agrant"
+if [ ! -e /home/opc/passwd ] ; then
+	echo "Web console password: ${PASSWD}" | sudo tee /home/opc/passwd >/dev/null
+	# Web console access? Not for terminal login
+	#echo -e "${PASSWD}\n${PASSWD}" | sudo passwd ubuntu
+	echo -e "${PASSWD}\n${PASSWD}" | sudo passwd opc
+fi
+
+if ( ! systemctl status cockpit | grep running ) ; then 
+	sudo systemctl enable --now cockpit.socket	
+fi
 
 # osms and osms-agent
 sudo renice 20 $(ps -e | grep osms | cut -f1 -d"?")
 #sudo renice 20 $(ps -e | grep wazuh-syscheckd | cut -f1 -d"?")
 
 if [ ! -e /mnt/2GiB.swap ] ; then
-	#sudo systemctl enable --now cockpit.socket
-	# Web console access? Not for terminal login
-	echo -e "${PASSWD}\n${PASSWD}" | sudo passwd opc
-	#echo -e "${PASSWD}\n${PASSWD}" | sudo passwd ubuntu
 
 	# https://help.ubuntu.com/community/SwapFaq
 	sudo swapoff -a	
