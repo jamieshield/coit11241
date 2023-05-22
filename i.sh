@@ -1,6 +1,9 @@
 #!/usr/bin/bash
+
+# Web console access?
 echo -e "${PASSWD}\n${PASSWD}" | sudo passwd opc
 echo -e "${PASSWD}\n${PASSWD}" | sudo passwd ubuntu
+
 if [ ! -e /mnt/1GiB.swap ] ; then
 	# https://help.ubuntu.com/community/SwapFaq
 	sudo swapoff -a	
@@ -14,7 +17,8 @@ fi
 if [ ! -e /etc/ajenti ] ; then
   # https://docs.ajenti.org/en/latest/man/install.html
   curl https://raw.githubusercontent.com/ajenti/ajenti/master/scripts/install.sh | sudo bash -s -
-  sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 8000 -j ACCEPT
-  sudo netfilter-persistent save
-  echo -e "${PASSWD}\n${PASSWD}" | sudo passwd root
+  sudo firewall-cmd --permanent --zone=public --add-port=8000/tcp
+  sudo firewall-cmd --zone=public --add-port=8000/tcp
+  ROOTPASSWD="vagrant"
+  echo -e "${ROOTPASSWD}\n${ROOTPASSWD}" | sudo passwd root
 fi
