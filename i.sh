@@ -9,7 +9,11 @@ if [ ! -e /home/opc/passwd ] ; then
 fi
 
 if ( ! systemctl status cockpit | grep running ) ; then 
-	sudo systemctl enable --now cockpit.socket	
+  sudo systemctl enable --now cockpit.socket	
+  # https://docs.oracle.com/en/operating-systems/oracle-linux/cockpit/cockpit-install.html#logging-into-cockpit
+  # 9090
+  sudo firewall-cmd --add-service=cockpit --permanent
+  sudo firewall-cmd --reload
 fi
 
 # osms and osms-agent
@@ -17,7 +21,6 @@ sudo renice 20 $(ps -e | grep osms | cut -f1 -d"?")
 #sudo renice 20 $(ps -e | grep wazuh-syscheckd | cut -f1 -d"?")
 
 if [ ! -e /mnt/2GiB.swap ] ; then
-
 	# https://help.ubuntu.com/community/SwapFaq
 	sudo swapoff -a	
 	sudo dd if=/dev/zero of=/mnt/2GiB.swap bs=1024 count=2097152  
@@ -34,9 +37,4 @@ if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; th
   curl -sSL https://repo.45drives.com/setup -o setup-repo.sh
   sudo bash setup-repo.sh
   sudo dnf -q -y install cockpit-navigator
-
-  # https://docs.oracle.com/en/operating-systems/oracle-linux/cockpit/cockpit-install.html#logging-into-cockpit
-  # 9090
-  sudo firewall-cmd --add-service=cockpit --permanent
-  sudo firewall-cmd --reload
 fi
