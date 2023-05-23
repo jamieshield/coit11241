@@ -9,15 +9,13 @@ function rnice() {
 	sudo renice 20 $(ps -e | grep osms | cut -f1 -d"?")
 }
 
-function setupStatusServer() {
-	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit ) ; then
-		# Arguments: PASSWD; Prereqs: google-authenticator setup
+function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticator setup
+	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit >/dev/null) ; then
 		sudo firewall-cmd --zone=public --add-port=4443/tcp
 		sudo pip3 install pyotp
 		sudo pip3 install qrcode
 		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
-		# already satisfied: pip install qrcode; 
-	fi
+	fi # already satisfied: pip install qrcode; 
 }
 
 function enableSwap() {
@@ -55,11 +53,20 @@ function setOpcPasswd() {
 }
 
 function enableCockpit() { # 9090
-	if ( ! systemctl status cockpit | grep running ) ; then 
-		sudo systemctl enable --now cockpit.socket	
+	echo "Enable Cockpit.1" | tee -a /tmp/init_status
+	if ( ! systemctl status cockpit.socket | grep running ) ; then 
+		echo "Enable Cockpit.enable" | tee -a /tmp/init_status
+		sudo systemctl enable --now cockpit.socket
+		echo "Enable Cockpit.stop" | tee -a /tmp/init_status		
+		sudo systemctl stop firewalld
+		echo "Enable Cockpit.fire" | tee -a /tmp/init_status		
 		sudo firewall-cmd --add-service=cockpit --permanent 
+		echo "Enable Cockpit.reload" | tee -a /tmp/init_status
 		sudo firewall-cmd --reload
+		echo "Enable Cockpit.start" | tee -a /tmp/init_status
+		sudo systemctl start firewalld
 	fi
+	echo "Enable Cockpit.done" | tee -a /tmp/init_status
 }	
 
 function installNavigator() { #https://github.com/45Drives/cockpit-navigator
@@ -110,19 +117,21 @@ function setupWazuh() {
 }	
 
 rnice
-echo "Enable Cockpit" > /tmp/init_status
+echo "Enable Cockpit" | tee -a /tmp/init_status
 enableCockpit
-# Generate certs
-curl https://localhost:9090 2>&1 >/dev/null
-echo "Enable status server" > /tmp/init_status # Used in status server
+echo "Generate certs" | tee -a /tmp/init_status
+curl https://localhost:9090 2>&1 >/dev/null || true
+ls /etc/cockpit/ws-certs.d/ | tee -a /tmp/init_status
+echo "Enable status server" | tee -a /tmp/init_status
 setupStatusServer
-echo "Enable swap" > /tmp/init_status
+echo "Enable swap" | tee -a /tmp/init_status
 #enableSwap
-echo "setupGoogleAuthenticator" > /tmp/init_status
+echo "setupGoogleAuthenticator" | tee -a /tmp/init_status
 setupGoogleAuthenticator
-echo "Setup Opc Passwd" > /tmp/init_status
+cat .google-authenticator | tee -a /tmp/init_status
+echo "Setup Opc Passwd" | tee -a /tmp/init_status
 setOpcPasswd
-echo "Setup Cockpit google authen" > /tmp/init_status
+echo "Setup Cockpit google authen" | tee -a /tmp/init_status
 setupCockpitGoogleAuthenticator
 rm -f /tmp/init_status
 installNavigator
