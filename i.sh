@@ -11,7 +11,9 @@ function rnice() {
 
 function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticator setup
 	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit >/dev/null) ; then
+		sudo systemctl stop firewalld
 		sudo firewall-cmd --zone=public --add-port=4443/tcp
+		sudo systemctl start firewalld
 		sudo pip3 install pyotp
 		sudo pip3 install qrcode
 		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
@@ -53,20 +55,13 @@ function setOpcPasswd() {
 }
 
 function enableCockpit() { # 9090
-	echo "Enable Cockpit.1" | tee -a /tmp/init_status
 	if ( ! systemctl status cockpit.socket | grep running ) ; then 
-		echo "Enable Cockpit.enable" | tee -a /tmp/init_status
 		sudo systemctl enable --now cockpit.socket
-		echo "Enable Cockpit.stop" | tee -a /tmp/init_status		
 		sudo systemctl stop firewalld
-		echo "Enable Cockpit.fire" | tee -a /tmp/init_status		
 		sudo firewall-cmd --add-service=cockpit --permanent 
-		echo "Enable Cockpit.reload" | tee -a /tmp/init_status
 		sudo firewall-cmd --reload
-		echo "Enable Cockpit.start" | tee -a /tmp/init_status
 		sudo systemctl start firewalld
 	fi
-	echo "Enable Cockpit.done" | tee -a /tmp/init_status
 }	
 
 function installNavigator() { #https://github.com/45Drives/cockpit-navigator
@@ -111,8 +106,10 @@ function setupWazuh() {
 		curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py
 		sudo python configWazuh.py
 
+		sudo systemctl stop firewalld
 		sudo firewall-cmd --add-service=https --permanent
 		sudo firewall-cmd --reload
+		sudo systemctl start firewalld
 	fi
 }	
 
