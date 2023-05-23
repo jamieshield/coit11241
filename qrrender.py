@@ -1,6 +1,7 @@
 
 # Serve the Google Authenticator QR code and Cockpit and Wazuh passwd
 # on https://:4443
+# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python -
 import pyotp, time, qrcode, base64, ssl
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from io import BytesIO
