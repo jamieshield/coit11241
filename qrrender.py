@@ -24,7 +24,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         if (os.path.isfile('/tmp/init_status')):
           status=open('/tmp/init_status').readline() 
           html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"+status
-		  self.wfile.write(str.encode(html))
+          self.wfile.write(str.encode(html))
         else:
           html="<html><h1>Google Authenticator</h1><img src='data:image/jpeg;base64,"+qr_str+"'></img><h1>Cockpit opc and Wazuh admin password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
           #totp = pyotp.TOTP(ga)
