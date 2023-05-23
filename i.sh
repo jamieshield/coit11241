@@ -11,9 +11,7 @@ function rnice() {
 
 function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticator setup
 	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit >/dev/null) ; then
-		sudo systemctl stop firewalld
 		sudo firewall-offline-cmd --zone=public --add-port=4443/tcp
-		sudo systemctl start firewalld
 		sudo pip3 install pyotp
 		sudo pip3 install qrcode
 		#sudo pip3 install Pillow
@@ -61,9 +59,7 @@ function setOpcPasswd() {
 function enableCockpit() { # 9090
 	if ( ! systemctl status cockpit.socket | grep running ) ; then 
 		sudo systemctl enable --now cockpit.socket
-		sudo firewall-cmd --add-service=cockpit --permanent 
-		sudo firewall-cmd --reload
-		sudo systemctl start firewalld
+		sudo firewall-offline-cmd --add-service=cockpit
 	fi
 }	
 
@@ -109,9 +105,7 @@ function setupWazuh() {
 		curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py
 		sudo python configWazuh.py
 
-		sudo systemctl stop firewalld
 		sudo firewall-offline-cmd --add-service=https
-		sudo systemctl start firewalld
 	fi
 }	
 
