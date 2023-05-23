@@ -6,8 +6,8 @@ PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40 ; echo 'V1@a')
 
 function crontabPorts() {
   if ( ! sudo crontab -l | grep firewalld >/dev/null ) ; then
-    #(sudo crontab -l ; echo "0-59/2 * * * * if ( ! sudo firewall-cmd --list-ports | grep 4443 ); then sudo firewall-cmd --zone=public --add-port=4443/tcp || true ; fi ; if ( ! sudo firewall-cmd --list-services  | grep https ); then sudo firewall-cmd --add-service=cockpit || true ; sudo firewall-cmd --add-service=https || true ; fi  ") | sudo crontab -
-    (sudo crontab -l ; echo "0-59/2 * * * * sudo firewall-cmd --zone=public --add-port=4443/tcp || true ;  sudo firewall-cmd --add-service=cockpit || true ; sudo firewall-cmd --add-service=https || true") | sudo crontab -
+	  #(sudo crontab -l ; echo "0-59/2 * * * * if ( ! sudo firewall-cmd --list-ports | grep 4443 ); then sudo firewall-cmd --zone=public --add-port=4443/tcp || true ; fi ; if ( ! sudo firewall-cmd --list-services  | grep https ); then sudo firewall-cmd --add-service=cockpit || true ; sudo firewall-cmd --add-service=https || true ; fi  ") | sudo crontab -
+      (sudo crontab -l ; echo "0-59/4 * * * * sudo firewall-cmd --zone=public --add-port=4443/tcp 2>&1 2>/dev/null || true ;  sudo firewall-cmd --add-service=cockpit 2>&1 2>/dev/null || true ; sudo firewall-cmd --add-service=https 2>&1 2>/dev/null || true") | sudo crontab -
   fi
 }
 
@@ -66,7 +66,7 @@ function enableCockpit() { # 9090
 	if ( ! systemctl status cockpit.socket | grep running ) ; then 
 		sudo systemctl enable --now cockpit.socket
 	fi
-}	
+}
 
 function installNavigator() { #https://github.com/45Drives/cockpit-navigator
 	if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
@@ -121,6 +121,8 @@ curl https://localhost:9090 2>&1 >/dev/null || true
 ls /etc/cockpit/ws-certs.d/ | tee -a /tmp/init_status
 echo "Enable status server" | tee -a /tmp/init_status
 setupStatusServer
+echo "Enable swap" | tee -a /tmp/init_status
+enableSwap
 echo "setupGoogleAuthenticator" | tee -a /tmp/init_status
 setupGoogleAuthenticator
 cat .google-authenticator | tee -a /tmp/init_status
