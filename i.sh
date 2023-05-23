@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-# Visit http:ip to view your passwords
+# Visit https:ip:4443 for your passwords
 # curl https://raw.githubusercontent.com/jamieshield/coit11241/main/i.sh | sudo bash -s -
 
 PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40 ; echo '')
@@ -10,11 +10,13 @@ function rnice() {
 }
 
 function setupStatusServer() {
-	if [ ! -e /mnt/2GiB.swap ] ; then
+	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit ) ; then
 		# Arguments: PASSWD; Prereqs: google-authenticator setup
 		sudo firewall-cmd --zone=public --add-port=4443/tcp
+		sudo pip3 install pyotp
+		sudo pip3 install qrcode
 		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
-		# already satisfied: pip install qrcode; pip install pyotp
+		# already satisfied: pip install qrcode; 
 	fi
 }
 
@@ -30,17 +32,17 @@ function enableSwap() {
 }
 
 function setupGoogleAuthenticator() {
-	if ( !  yum list installed google-authenticator 2>/dev/null >/dev/null ) ; then # https://www.ezeelogin.com/kb/article/how-to-install-google-authenticator-on-centos-ubuntu-323.html
+	if ( ! yum list installed google-authenticator 2>/dev/null >/dev/null ) ; then 
 		sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 		sudo yum -y install google-authenticator
-		sudo -u opc google-authenticator -t -d -f -r 3 -R 30 -W # time, no reuse, force, 3 attempts/30s, min window
-	fi
+		sudo -u opc google-authenticator -t -d -f -r 3 -R 30 -W 
+	fi # https://www.ezeelogin.com/kb/article/how-to-install-google-authenticator-on-centos-ubuntu-323.html
+	# time, no reuse, force, 3 attempts/30s, min window
 }
 
 function setupCockpitGoogleAuthenticator() {
 	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit ) ; then
 		echo "auth required pam_google_authenticator.so" | sudo tee -a /etc/pam.d/cockpit  >/dev/null
-		rm -f /tmp/init_status
 	fi
 }
 
@@ -52,17 +54,17 @@ function setOpcPasswd() {
 	fi
 }
 
-function enableCockpit() {
+function enableCockpit() { # 9090
 	if ( ! systemctl status cockpit | grep running ) ; then 
 		sudo systemctl enable --now cockpit.socket	
-		sudo firewall-cmd --add-service=cockpit --permanent # 9090
+		sudo firewall-cmd --add-service=cockpit --permanent 
 		sudo firewall-cmd --reload
 	fi
 }	
 
-function installNavigator() {
+function installNavigator() { #https://github.com/45Drives/cockpit-navigator
 	if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
-		echo "Install cockpit-navigator" #https://github.com/45Drives/cockpit-navigator
+		echo "Install cockpit-navigator" 
 		curl -sSL https://repo.45drives.com/setup | sudo bash -s -
 		sudo dnf -q -y install cockpit-navigator
 	fi
@@ -108,23 +110,23 @@ function setupWazuh() {
 }	
 
 rnice
+echo "Enable Cockpit" > /tmp/init_status
+enableCockpit
+# Generate certs
+curl https://localhost:9090 2>&1 >/dev/null
 echo "Enable status server" > /tmp/init_status # Used in status server
 setupStatusServer
 echo "Enable swap" > /tmp/init_status
-enableSwap
-echo "Setup google authenticator" > /tmp/init_status
+#enableSwap
+echo "setupGoogleAuthenticator" > /tmp/init_status
 setupGoogleAuthenticator
 echo "Setup Opc Passwd" > /tmp/init_status
 setOpcPasswd
 echo "Setup Cockpit google authen" > /tmp/init_status
-setupCockpitGoogleAuthenticator # Also serves PASSWD
-echo "Enable Cockpit" > /tmp/init_status
-enableCockpit
-echo "Cockpit enabled. Install navigator" > /tmp/init_status
+setupCockpitGoogleAuthenticator
+rm -f /tmp/init_status
 installNavigator
-echo "Cockpit enabled. Install Wazuh" > /tmp/init_status
 setupWazuh
-echo "Cockpit enabled. Starting Wazuh" > /tmp/init_status
 
 sudo systemctl start wazuh-indexer
 sudo systemctl start wazuh-dashboard
