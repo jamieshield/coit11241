@@ -106,14 +106,16 @@ function setupWazuh() {
 }	
 
 function openPorts() {
-    if (systemctl status firewalld | grep running >/dev/null) ; then 
-		sudo firewall-cmd --zone=public --add-port=4443/tcp
-		sudo firewall-cmd --add-service=cockpit --permanent
-		sudo firewall-cmd --add-service=https --permanent
-		sudo firewall-cmd --reload
-	else
+	echo "systemctl status firewalld || true"
+	systemctl status firewalld || true
+    #if (systemctl status firewalld | grep running ) ; then 
+	echo "sudo firewall-cmd --zone=public --add-port=4443/tcp"
+		sudo firewall-cmd --zone=public --add-port=4443/tcp &
+		echo "sudo firewall-cmd --zone=public --add-port=4443/tcp"
+		(sudo firewall-cmd --add-service=cockpit --permanent ; sudo firewall-cmd --add-service=https --permanent ; sudo firewall-cmd --reload) &
+	#else
 		echo "firewalld still down"
-	fi
+	#fi
 }
 
 rnice
