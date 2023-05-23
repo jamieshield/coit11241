@@ -23,7 +23,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         if (os.path.isfile('/tmp/init_status')):
-          status=open('/tmp/init_status').readline() 
+          status=open('/tmp/init_status').read().replace('\n','<br/>')
           html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"+status
           self.wfile.write(str.encode(html))
         else:
