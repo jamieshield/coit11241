@@ -11,7 +11,6 @@ function rnice() {
 
 function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticator setup
 	if ( ! grep pam_google_authenticator.so /etc/pam.d/cockpit >/dev/null) ; then
-		sudo firewall-offline-cmd --zone=public --add-port=4443/tcp
 		sudo pip3 install pyotp
 		sudo pip3 install qrcode
 		#sudo pip3 install Pillow
@@ -59,7 +58,6 @@ function setOpcPasswd() {
 function enableCockpit() { # 9090
 	if ( ! systemctl status cockpit.socket | grep running ) ; then 
 		sudo systemctl enable --now cockpit.socket
-		sudo firewall-offline-cmd --add-service=cockpit
 	fi
 }	
 
@@ -104,10 +102,19 @@ function setupWazuh() {
 		# Turn on vuln detection
 		curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py
 		sudo python configWazuh.py
-
-		sudo firewall-offline-cmd --add-service=https
 	fi
 }	
+
+function openPorts() {
+    if (systemctl status firewalld | grep running >/dev/null) ; then 
+		sudo firewall-cmd --zone=public --add-port=4443/tcp
+		sudo firewall-cmd --add-service=cockpit --permanent
+		sudo firewall-cmd --add-service=https --permanent
+		sudo firewall-cmd --reload
+	else
+		echo "firewalld still down"
+	fi
+}
 
 rnice
 echo "Enable Cockpit" | tee -a /tmp/init_status
@@ -117,6 +124,7 @@ curl https://localhost:9090 2>&1 >/dev/null || true
 ls /etc/cockpit/ws-certs.d/ | tee -a /tmp/init_status
 echo "Enable status server" | tee -a /tmp/init_status
 setupStatusServer
+openPorts
 echo "Enable swap" | tee -a /tmp/init_status
 #enableSwap
 echo "setupGoogleAuthenticator" | tee -a /tmp/init_status
@@ -124,11 +132,15 @@ setupGoogleAuthenticator
 cat .google-authenticator | tee -a /tmp/init_status
 echo "Setup Opc Passwd" | tee -a /tmp/init_status
 setOpcPasswd
+openPorts
 echo "Setup Cockpit google authen" | tee -a /tmp/init_status
 setupCockpitGoogleAuthenticator
+openPorts
 rm -f /tmp/init_status
 installNavigator
+openPorts
 setupWazuh
+openPorts
 
 sudo systemctl start wazuh-indexer
 sudo systemctl start wazuh-dashboard
