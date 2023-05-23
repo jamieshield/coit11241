@@ -34,7 +34,7 @@ function setupGoogleAuthenticator() {
 		sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 		sudo yum -y install google-authenticator
 		sudo -u opc google-authenticator -t -d -f -r 3 -R 30 -W # time, no reuse, force, 3 attempts/30s, min window
-	}
+	fi
 }
 
 function setupCockpitGoogleAuthenticator() {
