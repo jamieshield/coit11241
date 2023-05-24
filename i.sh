@@ -14,6 +14,9 @@ function crontabPorts() {
 function rnice() {
 	# osms and osms-agent
 	sudo renice 20 $(ps -e | grep osms | cut -f1 -d"?")
+	sudo systemctl stop packagekit
+	sudo systemctl disable packagekit
+	
 }
 
 function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticator setup
@@ -34,8 +37,9 @@ function enableSwap() {
 		sudo dd if=/dev/zero of=/mnt/2GiB.swap bs=1024 count=2097152  
 		sudo chmod 600 /mnt/2GiB.swap
 		sudo mkswap /mnt/2GiB.swap
-		sudo swapon /mnt/2GiB.swap
 		echo '/mnt/2GiB.swap swap swap defaults 0 0' | sudo tee -a /etc/fstab
+		sudo systemctl daemon-reload
+		sudo swapon -a
 	fi
 }
 
@@ -121,8 +125,8 @@ curl https://localhost:9090 2>&1 >/dev/null || true
 ls /etc/cockpit/ws-certs.d/ | tee -a /tmp/init_status
 echo "Enable status server" | tee -a /tmp/init_status
 setupStatusServer
-echo "Enable swap" | tee -a /tmp/init_status
-enableSwap
+#echo "Enable swap" | tee -a /tmp/init_status
+#enableSwap
 echo "setupGoogleAuthenticator" | tee -a /tmp/init_status
 setupGoogleAuthenticator
 cat .google-authenticator | tee -a /tmp/init_status
