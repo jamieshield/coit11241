@@ -4,10 +4,9 @@
 
 PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40 ; echo 'V1@a')
 
-function crontabPorts() {
-  if ( ! sudo crontab -l | grep firewalld >/dev/null ) ; then
-	  #(sudo crontab -l ; echo "0-59/2 * * * * if ( ! sudo firewall-cmd --list-ports | grep 4443 ); then sudo firewall-cmd --zone=public --add-port=4443/tcp || true ; fi ; if ( ! sudo firewall-cmd --list-services  | grep https ); then sudo firewall-cmd --add-service=cockpit || true ; sudo firewall-cmd --add-service=https || true ; fi  ") | sudo crontab -
-      (sudo crontab -l ; echo "0-59/4 * * * * sudo firewall-cmd --zone=public --add-port=4443/tcp 2>&1 2>/dev/null || true ;  sudo firewall-cmd --add-service=cockpit 2>&1 2>/dev/null || true ; sudo firewall-cmd --add-service=https 2>&1 2>/dev/null || true") | sudo crontab -
+function crontabPorts() {  # cloud-init struggles with firewall-cmd
+  if ( ! sudo crontab -l | grep firewall-cmd >/dev/null ) ; then
+      (sudo crontab -l ; echo "* * * * * sudo firewall-cmd --permanent --zone=public --add-port=4443/tcp 2>&1 2>/dev/null || true ;  sudo firewall-cmd --permanent--add-service=cockpit 2>&1 2>/dev/null || true ; sudo firewall-cmd --permanent --add-service=https 2>&1 2>/dev/null || true; sudo firewall-cmd --permanent --zone=public --add-port=1514/udp 2>&1 2>/dev/null || true; sudo firewall-cmd --permanent --zone=public --add-port=1514/tcp 2>&1 2>/dev/null || true; sudo firewall-cmd --zone=public --permanent --add-port=1515/tcp 2>&1 2>/dev/null || true; sudo crontab -l | grep -v firewall-cmd | sudo crontab -") | sudo crontab -
   fi
 }
 
@@ -82,24 +81,22 @@ function installNavigator() { #https://github.com/45Drives/cockpit-navigator
 
 function setupWazuh() {
 	if [[ ! -e ./wazuh-install.sh ]] ; then # https://documentation.wazuh.com/current/quickstart.html
-		# Disable dashboard every 6 hours
-		if ( ! sudo crontab -l | grep wazuh-dashboard >/dev/null ) ; then
-			(sudo crontab -l ; echo "30 0-23/4 * * * /usr/bin/systemctl stop wazuh-dashboard" ) | sudo crontab -
-		fi
-
 		curl -sO https://packages.wazuh.com/4.4/wazuh-install.sh 
 		sudo bash ./wazuh-install.sh -a -i
 
 		sudo systemctl stop wazuh-dashboard
 		sudo systemctl stop wazuh-manager
 		sudo systemctl stop wazuh-indexer
+		sudo systemctl stop filebeat
+		sudo systemctl disable filebeat
 
 		echo "Setting wazuh password. Alt we could extract current password during setup."
 		# remove password checks
 		if [[ ! -e /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig ]] ; then 
 			sudo cp -n /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh  /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig 
 			sudo sed -e 's/if ! echo.*/if false ; then/' /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig | sudo tee /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh > /dev/null
-			sudo /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh --user admin --password ${PASSWD}
+			sudo rm -rf /etc/wazuh-indexer/backup # Access denied errors
+			sudo /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh --user admin --password "${PASSWD}"
 		fi
 
 		# indexer not starting - timeout
@@ -109,10 +106,14 @@ function setupWazuh() {
 		fi # https://www.reddit.com/r/Wazuh/comments/107vup6/wazuhindexer_and_wazuhmanager_fails_with_timeout/
 
 		sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-	
 		# Turn on vuln detection
-		curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py
-		sudo python configWazuh.py
+		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
+
+		sudo systemctl daemon-reload
+		if ( ! sudo crontab -l | grep wazuh-indexer >/dev/null ) ; then
+			(sudo crontab -l ; echo "0-59/10 * * * * if (! /usr/bin/systemctl status wazuh-indexer | grep running); then sudo systemctl stop wazuh-dashboard; sudo systemctl stop wazuh-manager; sudo systemctl start wazuh-indexer && sudo systemctl start wazuh-manager && sudo systemctl start wazuh-dashboard; fi" ) | sudo crontab -
+		fi
+
 	fi
 }	
 
