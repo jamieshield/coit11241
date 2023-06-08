@@ -2,7 +2,7 @@
 # JS Derived from # https://github.com/Nyr/openvpn-install
 #
 # Copyright (c) 2013 Nyr. Released under the MIT License.
-# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/openvpninstall_auto.sh | sudo bash -s -
+# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/openvpn-install_auto.sh | sudo bash -s -
 
 # Detect Debian users running the script with "sh" instead of bash
 if readlink /proc/$$/exe | grep -q "dash"; then
