@@ -37,6 +37,10 @@ elif [[ -e /etc/fedora-release ]]; then
 	os="fedora"
 	os_version=$(grep -oE '[0-9]+' /etc/fedora-release | head -1)
 	group_name="nobody"
+elif [[ -e /etc/oracle-release ]]; then #JS
+	os="fedora"
+	os_version=$(grep -oE '[0-9]+' /etc/oracle-release | head -1)
+	group_name="nobody"
 else
 	echo "This installer seems to be running on an unsupported distribution.
 Supported distros are Ubuntu, Debian, AlmaLinux, Rocky Linux, CentOS and Fedora."
