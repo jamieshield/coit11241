@@ -2,11 +2,17 @@
 # Serve the Google Authenticator QR code and Cockpit and Wazuh passwd
 # on https://:4443
 # curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python -
-import pyotp, time, qrcode, base64, ssl, os
+
+# Assumes cockpit certificates are installed
+import ssl, os, time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from io import BytesIO
 
+# Progress bar
+start_time = time.time()
+
 def qrCode():
+  import pyotp, qrcode, base64
   ga = open('/home/opc/.google_authenticator').readline().strip() #'JPEXP'
   passwd=open('/home/opc/passwd').readline().strip() # vagrant
 
@@ -23,13 +29,25 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         if (os.path.isfile('/tmp/init_status')):
+          html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"
+          time_elapsed=time.time()-start_time
+          # How long does it take? 
+          FULL_TIME=300
+          progress=time_elapsed/FULL_TIME*100
+          html+='<progress value="'+progress+'" max="100">'+progress+'% </progress>'
           status=open('/tmp/init_status').read().replace('\n','<br/>')
-          html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"+status
+          html+=status
+
           self.wfile.write(str.encode(html))
         else:
           passwd=open('/home/opc/passwd').readline().strip() # vagrant
-          qr_str=qrCode() 
-          html="<html><h1>Google Authenticator</h1><img src='data:image/jpeg;base64,"+qr_str+"'></img><h1>Cockpit opc and Wazuh admin password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
+          html="<html>"
+          # Is Authenticator being installed?
+          if (os.path.isfile('/tmp/googleAuthenticator')):
+              qr_str=qrCode() 
+              html+="<h1>Google Authenticator</h1><img src='data:image/jpeg;base64,"+qr_str+"'></img>"
+
+          html+="<h1>Cockpit opc and Wazuh admin password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
           #totp = pyotp.TOTP(ga)
           #print("Current OTP:", totp.now())
           self.wfile.write(str.encode(html))
