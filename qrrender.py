@@ -54,7 +54,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             else:
               html=progressBarHtml()
               status=open('/var/log/cloud-init-output.log').read().replace('\n','<br/>')
+              html+="<div style='height:600px; overflow: scroll;'>"
               html+=status
+              html+="</div>"
 
           else:
             passwordServed=True
