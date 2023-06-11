@@ -111,8 +111,11 @@ function setupWazuh() {
 		if [[ ! -e /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig ]] ; then 
 			sudo cp -n /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh  /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig 
 			sudo sed -e 's/if ! echo.*/if false ; then/' /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig | sudo tee /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh > /dev/null
+			#sudo chown -R wazuh-indexer /etc/wazuh-indexer/backup 
+			#sudo chgrp -R wazuh-indexer /etc/wazuh-indexer/backup 
 			sudo rm -rf /etc/wazuh-indexer/backup # Access denied errors
 			sudo /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh --user admin --password "${PASSWD}"
+			sudo rm -rf /etc/wazuh-indexer/backup # Access denied errors
 		fi
 
 		# indexer not starting - timeout
