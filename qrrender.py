@@ -33,6 +33,7 @@ def progressBarHtml():
    # How long does it take? 
    FULL_TIME=1000
    progress=time_elapsed/FULL_TIME*100
+   progress=str(progress)
    html+='<progress value="'+progress+'" max="100">'+progress+'% </progress>'
    return html
 
