@@ -27,6 +27,7 @@ def qrCode():
   return qr_str
 
 def progressBarHtml():
+   global start_time
    html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"
    time_elapsed=time.time()-start_time
    # How long does it take? 
@@ -38,6 +39,7 @@ def progressBarHtml():
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        global passwordServed # is a new handler created for each request?
         self.send_response(200)
         self.end_headers()
         if (os.path.isfile('/tmp/init_status')):
