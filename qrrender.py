@@ -53,12 +53,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
               exit()
             else:
               html=progressBarHtml()
-              status=open('/var/log/cloud-init-output.log').read().replace('\n','<br/>')
+              status=open('/var/log/cloud-init-output.log').read() #.replace('\n','<br/>')
               html+="<br/>"
-              html+=status.splitlines('\n')[-1]
+              html+=status.splitlines()[-1]
               html+="<br/>"
               html+="<div style='height:600px; overflow: scroll;'>"
-              html+=status
+              html+=status.replace('\n','<br/>')
               html+="</div>"
 
           else:
