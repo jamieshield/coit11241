@@ -160,6 +160,7 @@ fi
 rm -f /tmp/init_status
 installNavigator
 setupWazuh
+touch /tmp/cloudinitcomplete
 
 sudo systemctl start wazuh-indexer
 sudo systemctl start wazuh-dashboard
