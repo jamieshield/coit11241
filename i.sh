@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # Visit https:ip:4443 for your passwords
-# curl https://raw.githubusercontent.com/jamieshield/coit11241/main/i.sh | sudo bash -s -
+# curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/i.sh | sudo bash -s -
 
 # The password is exposed on boot if navigator is not installed
 # LEAKAGE
@@ -40,8 +40,8 @@ function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticato
         # The password is exposed if no wazuh-passwords.txt
 	if [ ! -e /wazuh-passwords.txt ] ; then
 	   if [ ! -e /home/opc/passwd ] ; then
-                # Start the status and password server
-		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
+                echo "Start the status and password server"
+		curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
            fi
         fi
 }
@@ -133,7 +133,7 @@ function setupWazuh() {
 
 		sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
 		echo "Turn on vuln detection" 
-		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
+		curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
 
 		sudo systemctl daemon-reload
 		if ( ! sudo crontab -l | grep wazuh-indexer >/dev/null ) ; then
@@ -150,7 +150,7 @@ crontabPorts
 echo "Enable Cockpit" | tee -a /tmp/init_status
 enableCockpit
 echo "Generate certs for cockpit access and status server" | tee -a /tmp/init_status
-curl https://localhost:9090 2>&1 >/dev/null || true
+curl -s https://localhost:9090 2>&1 >/dev/null || true
 ls /etc/cockpit/ws-certs.d/ | tee -a /tmp/init_status
 echo "Setup status server" | tee -a /tmp/init_status
 setupStatusServer
