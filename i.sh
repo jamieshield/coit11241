@@ -99,7 +99,7 @@ function installNavigator() { #https://github.com/45Drives/cockpit-navigator
 }
 
 function setupWazuh() {
-	if [[ ! -e ./wazuh-install.sh ]] ; then # https://documentation.wazuh.com/current/quickstart.html
+	if [[ ! -e /home/opc/wazuh-install.sh ]] ; then # https://documentation.wazuh.com/current/quickstart.html
 		curl -sO https://packages.wazuh.com/4.4/wazuh-install.sh 
 		sudo bash ./wazuh-install.sh -a -i
 
@@ -125,8 +125,8 @@ function setupWazuh() {
 			#sudo rm -rf /etc/wazuh-indexer/backup # Access denied errors
 		#fi
 
-		echo "Prevent Indexer not starting - add timeout" 
 		if [[ ! -e /etc/systemd/system/wazuh-indexer.service.d ]] ; then
+			echo "Prevent Indexer not starting - add timeout" 
 			sudo mkdir /etc/systemd/system/wazuh-indexer.service.d
 			echo -e "[Service]\nTimeoutStartSec=300" | sudo tee /etc/systemd/system/wazuh-indexer.service.d/startup-timeout.conf > /dev/null
 		fi # https://www.reddit.com/r/Wazuh/comments/107vup6/wazuhindexer_and_wazuhmanager_fails_with_timeout/
