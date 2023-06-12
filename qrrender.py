@@ -73,7 +73,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
               html+=str(timeElaspsed())
               self.wfile.write(str.encode(html))
               exit()
-        elif (stage=STAGE_SHOWOPC):
+        elif (stage==STAGE_SHOWOPC):
             passwordServed=True
             passwd=open('/home/opc/passwd').readline().strip() # vagrant
             html="<html>"
@@ -84,7 +84,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             html+="<h1>Cockpit opc password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
             #totp = pyotp.TOTP(ga)
             #print("Current OTP:", totp.now())
-        elif (stage=STAGE_SHOWWAZUH):
+        elif (stage==STAGE_SHOWWAZUH):
             wazuh_passwordServed=True
             passwd=open('/wazuh-passwds.txt').readline()
             html="<html>"
