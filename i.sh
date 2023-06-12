@@ -106,9 +106,9 @@ function setupWazuh() {
 		sudo systemctl stop filebeat
 		sudo systemctl disable filebeat
 
-		echo "Setting wazuh password. Alt we could extract current password during setup."
 		# remove password checks
 		if [[ ! -e /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig ]] ; then 
+			echo "Setting wazuh password. Alt we could extract current password during setup." | tee -a /tmp/init_status
 			sudo cp -n /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh  /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig 
 			sudo sed -e 's/if ! echo.*/if false ; then/' /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh.orig | sudo tee /usr/share/wazuh-indexer/plugins/opensearch-security/tools/wazuh-passwords-tool.sh > /dev/null
 			#sudo chown -R wazuh-indexer /etc/wazuh-indexer/backup 
@@ -118,25 +118,27 @@ function setupWazuh() {
 			sudo rm -rf /etc/wazuh-indexer/backup # Access denied errors
 		fi
 
-		# indexer not starting - timeout
+		echo "Prevent Indexer not starting - add timeout" | tee -a /tmp/init_status
 		if [[ ! -e /etc/systemd/system/wazuh-indexer.service.d ]] ; then
 			sudo mkdir /etc/systemd/system/wazuh-indexer.service.d
 			echo -e "[Service]\nTimeoutStartSec=240" | sudo tee /etc/systemd/system/wazuh-indexer.service.d/startup-timeout.conf > /dev/null
 		fi # https://www.reddit.com/r/Wazuh/comments/107vup6/wazuhindexer_and_wazuhmanager_fails_with_timeout/
 
 		sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-		# Turn on vuln detection
+		echo "Turn on vuln detection" | tee -a /tmp/init_status
 		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
 
 		sudo systemctl daemon-reload
-		# Cron job to restart Wazuh if it falls over
 		if ( ! sudo crontab -l | grep wazuh-indexer >/dev/null ) ; then
+			echo "Add Cron job to restart Wazuh if it falls over"
 			(sudo crontab -l ; echo "0-59/10 * * * * if (! /usr/bin/systemctl status wazuh-indexer | grep running); then sudo systemctl stop wazuh-dashboard; sudo systemctl stop wazuh-manager; sudo systemctl start wazuh-indexer && sudo systemctl start wazuh-manager && sudo systemctl start wazuh-dashboard; fi" ) | sudo crontab -
 		fi
 	fi
 }	
 
+echo "Nice some processes" | tee -a /tmp/init_status
 rnice
+echo "Crontab Ports" | tee -a /tmp/init_status
 crontabPorts
 echo "Enable Cockpit" | tee -a /tmp/init_status
 enableCockpit
