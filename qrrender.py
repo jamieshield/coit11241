@@ -27,7 +27,7 @@ def qrCode():
   qr_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
   return qr_str
 
-def timeElaspsed():
+def timeElapsed():
    global start_time
    time_elapsed=time.time()-start_time
    return time_elapsed
@@ -70,7 +70,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         #html+=status
         if (stage==STAGE_COMPLETE):
               html="<html><h1>Installation complete</h1>"
-              html+=str(timeElaspsed())
+              html+=str(timeElapsed())
               self.wfile.write(str.encode(html))
               exit()
         elif (stage==STAGE_OPC):
