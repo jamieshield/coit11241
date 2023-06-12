@@ -11,7 +11,8 @@ from io import BytesIO
 # Progress bar
 start_time = time.time()
 
-passwordServed=False
+passwordServed=False # opc
+wazuh_passwordServed=False
 
 def qrCode():
   import pyotp, qrcode, base64
@@ -26,13 +27,16 @@ def qrCode():
   qr_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
   return qr_str
 
-def progressBarHtml():
+def timeElaspsed():
    global start_time
-   html="<html><meta http-equiv='refresh' content='30'><html><h1>Status</h1>"
    time_elapsed=time.time()-start_time
+   return time_elapsed
+
+def progressBarHtml():
+   html="<html><meta http-equiv='refresh' content='30'><body><h1>Status</h1>"
    # How long does it take? 
-   FULL_TIME=1000
-   progress=time_elapsed/FULL_TIME*100
+   FULL_TIME=2460
+   progress=timeElapsed()/FULL_TIME*100
    progress=str(progress)
    html+='<progress value="'+progress+'" max="100">'+progress+'% </progress>'
    return html
@@ -41,27 +45,35 @@ def progressBarHtml():
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         global passwordServed # is a new handler created for each request?
+        global wazuh_passwordServed 
         self.send_response(200)
         self.end_headers()
-        if (os.path.isfile('/tmp/init_status')):
-          html=progressBarHtml()
-          status=open('/tmp/init_status').read().replace('\n','<br/>')
-          html+=status
-        else:
-          if (passwordServed):
-            if (os.path.isfile('/tmp/cloudinitcomplete')):
-              exit()
-            else:
-              html=progressBarHtml()
-              status=open('/var/log/cloud-init-output.log').read() #.replace('\n','<br/>')
-              html+="<br/>"
-              html+=status.splitlines()[-1]
-              html+="<br/>"
-              html+="<div style='height:600px; overflow: scroll;'>"
-              html+=status.replace('\n','<br/>')
-              html+="</div>"
 
-          else:
+        STAGE_SHOWCLOUD="1"
+        STAGE_OPC="2"
+        STAGE_WAZUH="3"
+        STAGE_COMPLETE="4"
+
+        stage=STAGE_SHOWCLOUD
+        #if (os.path.isfile('/tmp/init_status')):
+        if (passwordServed):
+           if (wazuh_passwordServed):
+             if (os.path.isfile('/tmp/cloudinitcomplete')):
+               stage=STAGE_COMPLETE
+           elif (os.path.isfile('/wazuh-passwords.txt')):
+               stage=STAGE_WAZUH
+        elif (!os.path.isfile('/tmp/init_status')):
+          stage=STAGE_SHOWOPC
+
+        #html=progressBarHtml()
+        #status=open('/tmp/init_status').read().replace('\n','<br/>')
+        #html+=status
+        if (stage==STAGE_COMPLETE):
+              html="<html><h1>Installation complete</h1>"
+              html+=str(timeElaspsed())
+              self.wfile.write(str.encode(html))
+              exit()
+        elif (stage=STAGE_SHOWOPC):
             passwordServed=True
             passwd=open('/home/opc/passwd').readline().strip() # vagrant
             html="<html>"
@@ -69,10 +81,26 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             if (os.path.isfile('/tmp/googleAuthenticator')):
                 qr_str=qrCode() 
                 html+="<h1>Google Authenticator</h1><img src='data:image/jpeg;base64,"+qr_str+"'></img>"
-
-            html+="<h1>Cockpit opc and Wazuh admin password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
+            html+="<h1>Cockpit opc password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
             #totp = pyotp.TOTP(ga)
             #print("Current OTP:", totp.now())
+        elif (stage=STAGE_SHOWWAZUH):
+            wazuh_passwordServed=True
+            passwd=open('/wazuh-passwds.txt').readline()
+            html="<html>"
+            html+="<h1>Wazuh admin password</h1>"+passwd+"<br/>Also saved in root directory. This page is only available when cockpit is setup."
+        else:
+              html=progressBarHtml()
+              status=open('/var/log/cloud-init-output.log').read() #.replace('\n','<br/>')
+              html+="<br/>"
+              html+=status.splitlines()[-1]
+              html+="<br/><hr/>"
+              html+="<div style='height:400px; overflow: scroll;'>"
+              html+=status.replace('\n','<br/>')
+              html+="</div>"
+              if (stage!=STAGE_SHOWCLOUD):
+                 html="<html><h1>Unknown stage</h1>"
+
         self.wfile.write(str.encode(html))
 
 httpd = HTTPServer(('', 4443), SimpleHTTPRequestHandler)
