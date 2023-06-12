@@ -35,7 +35,7 @@ def timeElaspsed():
 def progressBarHtml():
    html="<html><meta http-equiv='refresh' content='30'><body><h1>Status</h1>"
    # How long does it take? 
-   FULL_TIME=2460
+   FULL_TIME=3000
    progress=timeElapsed()/FULL_TIME*100
    progress=str(progress)
    html+='<progress value="'+progress+'" max="100">'+progress+'% </progress>'
@@ -44,15 +44,15 @@ def progressBarHtml():
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        global passwordServed # is a new handler created for each request?
+        global passwordServed # I think a new handler is created for each request?
         global wazuh_passwordServed 
         self.send_response(200)
         self.end_headers()
 
-        STAGE_SHOWCLOUD="1"
-        STAGE_OPC="2"
-        STAGE_WAZUH="3"
-        STAGE_COMPLETE="4"
+        STAGE_SHOWCLOUD=1
+        STAGE_OPC=2 # serve opc password
+        STAGE_WAZUH=3 # serve wazuh admin password
+        STAGE_COMPLETE=4
 
         stage=STAGE_SHOWCLOUD
         #if (os.path.isfile('/tmp/init_status')):
@@ -62,7 +62,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                stage=STAGE_COMPLETE
            elif (os.path.isfile('/wazuh-passwords.txt')):
                stage=STAGE_WAZUH
-        elif (!os.path.isfile('/tmp/init_status')):
+        elif (not(os.path.isfile('/tmp/init_status'))):
           stage=STAGE_SHOWOPC
 
         #html=progressBarHtml()
