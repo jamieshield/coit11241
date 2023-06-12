@@ -86,7 +86,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             #print("Current OTP:", totp.now())
         elif (stage==STAGE_WAZUH):
             wazuh_passwordServed=True
-            passwd=open('/wazuh-passwds.txt').readline()
+            passwd=open('/wazuh-passwords.txt').readline()
             html="<html>"
             html+="<h1>Wazuh admin password</h1>"+passwd+"<br/>Also saved in root directory. This page is only available when cockpit is setup."
         else:
