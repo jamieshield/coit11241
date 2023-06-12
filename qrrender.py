@@ -84,6 +84,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             html+="<h1>Cockpit opc password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
             #totp = pyotp.TOTP(ga)
             #print("Current OTP:", totp.now())
+
+            # hack tack on wazuh passwd
+            if (os.path.isfile('/wazuh-passwords.txt')):
+              wazuh_passwordServed=True
+              passwd=open('/wazuh-passwords.txt').readline()
+              html+="<h1>Wazuh admin password</h1>"+passwd+"<br/>Also saved in root directory. This page is only available when cockpit is setup."
+
         elif (stage==STAGE_WAZUH):
             wazuh_passwordServed=True
             passwd=open('/wazuh-passwords.txt').readline()
