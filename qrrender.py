@@ -63,7 +63,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
            elif (os.path.isfile('/wazuh-passwords.txt')):
                stage=STAGE_WAZUH
         elif (not(os.path.isfile('/tmp/init_status'))):
-          stage=STAGE_SHOWOPC
+          stage=STAGE_OPC
 
         #html=progressBarHtml()
         #status=open('/tmp/init_status').read().replace('\n','<br/>')
@@ -73,7 +73,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
               html+=str(timeElaspsed())
               self.wfile.write(str.encode(html))
               exit()
-        elif (stage==STAGE_SHOWOPC):
+        elif (stage==STAGE_OPC):
             passwordServed=True
             passwd=open('/home/opc/passwd').readline().strip() # vagrant
             html="<html>"
@@ -84,7 +84,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             html+="<h1>Cockpit opc password</h1>"+passwd+"<br/>Also saved in home directory. This page is only available when cockpit is setup."
             #totp = pyotp.TOTP(ga)
             #print("Current OTP:", totp.now())
-        elif (stage==STAGE_SHOWWAZUH):
+        elif (stage==STAGE_WAZUH):
             wazuh_passwordServed=True
             passwd=open('/wazuh-passwds.txt').readline()
             html="<html>"
