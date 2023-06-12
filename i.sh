@@ -37,8 +37,8 @@ function setupStatusServer() { # Arguments: PASSWD; Prereqs: google-authenticato
 			sudo python3 -m pip install Pillow -v
 		fi # already satisfied: pip install qrcode; 
 	fi
-        # The password is exposed if navigator is not installed
-	if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
+        # The password is exposed if no wazuh-passwords.txt
+	if [ ! -e /wazuh-passwords.txt ] ; then
 	   if [ ! -e /home/opc/passwd ] ; then
                 # Start the status and password server
 		curl https://raw.githubusercontent.com/jamieshield/coit11241/main/qrrender.py | sudo python - & 
@@ -89,7 +89,9 @@ function enableCockpit() { # 9090
 }
 
 function installNavigator() { #https://github.com/45Drives/cockpit-navigator
-	if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
+	#if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
+	# dnf is corrupting
+	if [[ ! -e /wazuh-passwords.txt ]] ; then
 		echo "Install cockpit-navigator" 
 		curl -sSL https://repo.45drives.com/setup | sudo bash -s -
 		sudo dnf -q -y install cockpit-navigator
