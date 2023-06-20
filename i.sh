@@ -90,8 +90,8 @@ function enableCockpit() { # 9090
 
 function installNavigator() { #https://github.com/45Drives/cockpit-navigator
 	#if ( ! dnf list installed 2>/dev/null | grep cockpit-navigator >/dev/null ) ; then
-	# dnf is corrupting
-	if [[ ! -e /wazuh-passwords.txt ]] ; then
+	# is dnf corrupting rpm database?
+	if [[ ! -e /usr/share/cockpit/navigator ]] ; then
 		echo "Install cockpit-navigator" 
 		curl -sSL https://repo.45drives.com/setup | sudo bash -s -
 		sudo dnf -q -y install cockpit-navigator
@@ -107,7 +107,7 @@ function setupWazuh() {
 		sudo systemctl stop wazuh-manager
 		sudo systemctl stop wazuh-indexer
 		sudo systemctl stop filebeat
-		sudo systemctl disable filebeat
+		#sudo systemctl disable filebeat
 
 		if [[ ! -e /wazuh-passwords.txt ]] ; then 
 			sudo tar -O -xvzf /wazuh-install-files.tar wazuh-install-files/wazuh-passwords.txt | grep 'indexer_password' | head -n1 > /wazuh-passwords.txt
@@ -167,11 +167,40 @@ if [ "${USE_GOOGLE_AUTHENTICATOR}" = true ]; then
 	setupCockpitGoogleAuthenticator
 fi
 rm -f /tmp/init_status
-installNavigator
 setupWazuh
+sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
+sudo cp --no-clobber /var/ossec/etc/shared/default/agent.conf /var/ossec/etc/shared/default/agent.conf.orig
+sudo cp --no-clobber /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json  /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json.orig
+sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/cpe_helper.json
+sudo mv cpe_helper.json /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json
 touch /tmp/cloudinitcomplete
+
+
+# https://github.com/wazuh/wazuh/discussions/14731
+# https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
+sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
+sudo chmod u+x flush-vd-state
+
+sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/restartWazuh.sh
+sudo chmod u+x restartWazuh.sh
+sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/wazuhTroubleshoot.sh
+sudo chmod u+x wazuhTroubleshoot.sh
+sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/triggerScan.sh
+sudo chmod u+x triggerScan.sh
+sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/checkCpeHelper.sh
+sudo chmod u+x checkCpeHelper.sh
 
 sudo systemctl start wazuh-indexer
 sudo systemctl start wazuh-dashboard
 sudo systemctl start wazuh-manager
+sudo systemctl start filebeat
 
+
+#rpm --rebuilddb # dnf install cockpit corrupting rpmd
+# cpe_helper
+if ( ! dnf list installed perl-JSON-PP 2>/dev/null >/dev/null ) ; then 
+	echo "install json_pp" 
+	sudo dnf -y install perl-JSON-PP
+fi
+
+installNavigator
