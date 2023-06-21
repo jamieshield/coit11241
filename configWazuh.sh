@@ -3,8 +3,8 @@
 # also used by 11241/vms/wazuhOVA
 
 sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-echo "Turn on vuln detection" 
-curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
+#echo "Turn on vuln detection" 
+#curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
 sudo cp --no-clobber /var/ossec/etc/shared/default/agent.conf /var/ossec/etc/shared/default/agent.conf.orig
 sudo cp --no-clobber /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json  /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json.orig
 sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/cpe_helper.json

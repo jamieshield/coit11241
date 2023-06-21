@@ -46,7 +46,7 @@ en.firstChild.nodeValue="no"
 
 vd=ossecConf.getElementsByTagName("remote")[0]
 en=vd.getElementsByTagName("protocol")[0]
-en.firstChild.nodeValue="udp"
+#en.firstChild.nodeValue="udp"
 
 # Remove localfiles so no local events are forwarded to wazuh
 vdarr=ossecConf.getElementsByTagName("ossec_config")

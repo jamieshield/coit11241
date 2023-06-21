@@ -165,6 +165,8 @@ fi
 rm -f /tmp/init_status
 setupWazuh
 curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.sh | sudo bash -s -
+curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
+
 
 touch /tmp/cloudinitcomplete
 sudo systemctl start wazuh-indexer
