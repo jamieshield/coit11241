@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # Configuration of Wazuh server ossec.conf
+#  including default 11241/vms/wazuhOVA
 # Agents' ossec.conf need configuration too - elsewhere
 
 
@@ -32,7 +33,7 @@ for vd in vdarr:
     en=vd.getElementsByTagName("enabled")[0]
     en.firstChild.nodeValue="yes"
     en=vd.getElementsByTagName("update_from_year")[0]
-    en.firstChild.nodeValue="2010"
+    en.firstChild.nodeValue="2019"
 
 
 # FIM

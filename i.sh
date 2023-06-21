@@ -131,10 +131,6 @@ function setupWazuh() {
 			echo -e "[Service]\nTimeoutStartSec=300" | sudo tee /etc/systemd/system/wazuh-indexer.service.d/startup-timeout.conf > /dev/null
 		fi # https://www.reddit.com/r/Wazuh/comments/107vup6/wazuhindexer_and_wazuhmanager_fails_with_timeout/
 
-		sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-		echo "Turn on vuln detection" 
-		curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
-
 		sudo systemctl daemon-reload
 		if ( ! sudo crontab -l | grep wazuh-indexer >/dev/null ) ; then
 			echo "Add Cron job to restart Wazuh if it falls over"
@@ -168,28 +164,9 @@ if [ "${USE_GOOGLE_AUTHENTICATOR}" = true ]; then
 fi
 rm -f /tmp/init_status
 setupWazuh
-sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
-sudo cp --no-clobber /var/ossec/etc/shared/default/agent.conf /var/ossec/etc/shared/default/agent.conf.orig
-sudo cp --no-clobber /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json  /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json.orig
-sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/cpe_helper.json
-sudo mv cpe_helper.json /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json
+curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.sh | sudo bash -s -
+
 touch /tmp/cloudinitcomplete
-
-
-# https://github.com/wazuh/wazuh/discussions/14731
-# https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
-sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
-sudo chmod u+x flush-vd-state
-
-sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/restartWazuh.sh
-sudo chmod u+x restartWazuh.sh
-sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/wazuhTroubleshoot.sh
-sudo chmod u+x wazuhTroubleshoot.sh
-sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/triggerScan.sh
-sudo chmod u+x triggerScan.sh
-sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/checkCpeHelper.sh
-sudo chmod u+x checkCpeHelper.sh
-
 sudo systemctl start wazuh-indexer
 sudo systemctl start wazuh-dashboard
 sudo systemctl start wazuh-manager
