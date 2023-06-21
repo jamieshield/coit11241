@@ -11,16 +11,23 @@ from xml.dom import minidom
 f=open("/var/ossec/etc/ossec.conf",'r'); xml=f.read(); f.close();
 xml="<a>"+xml+"</a>"
 ossecConf=minidom.parseString(xml)
-#<ossec_config>
-#  <vulnerability-detector>
-#    <enabled>yes</enabled>
-vd=ossecConf.getElementsByTagName("vulnerability-detector")[0]
-en=vd.getElementsByTagName("enabled")[0]
-en.firstChild.nodeValue="yes"
+
+# <remote>
+#    <port>1514</port>
+#    <protocol>tcp</protocol>
+vd=ossecConf.getElementsByTagName("remote")[0]
+en=vd.getElementsByTagName("protocol")[0]
+#en.firstChild.nodeValue="udp"
 
 # <sca>
 #    <enabled>yes</enabled>
 vd=ossecConf.getElementsByTagName("sca")[0]
+en=vd.getElementsByTagName("enabled")[0]
+#en.firstChild.nodeValue="yes"
+
+#  <vulnerability-detector>
+#    <enabled>yes</enabled>
+vd=ossecConf.getElementsByTagName("vulnerability-detector")[0]
 en=vd.getElementsByTagName("enabled")[0]
 en.firstChild.nodeValue="yes"
 
@@ -31,9 +38,9 @@ vdarr=ossecConf.getElementsByTagName("provider")
 for vd in vdarr:
   if (vd.getAttribute('name')=='nvd'):
     en=vd.getElementsByTagName("enabled")[0]
-    en.firstChild.nodeValue="yes"
+    #en.firstChild.nodeValue="yes"
     en=vd.getElementsByTagName("update_from_year")[0]
-    en.firstChild.nodeValue="2019"
+    #en.firstChild.nodeValue="2019"
 
 
 # FIM
@@ -41,12 +48,9 @@ for vd in vdarr:
 #    <disabled>no</disabled>
 vd=ossecConf.getElementsByTagName("syscheck")[0]
 en=vd.getElementsByTagName("disabled")[0]
-en.firstChild.nodeValue="no"
+#en.firstChild.nodeValue="no"
 
 
-vd=ossecConf.getElementsByTagName("remote")[0]
-en=vd.getElementsByTagName("protocol")[0]
-#en.firstChild.nodeValue="udp"
 
 # Remove localfiles so no local events are forwarded to wazuh
 vdarr=ossecConf.getElementsByTagName("ossec_config")
