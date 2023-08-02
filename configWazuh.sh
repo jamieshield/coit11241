@@ -7,10 +7,9 @@ sudo cp --no-clobber /var/ossec/etc/ossec.conf /var/ossec/etc/ossec.conf.orig
 #curl -s https://raw.githubusercontent.com/jamieshield/coit11241/main/configWazuh.py | sudo python -
 sudo cp --no-clobber /var/ossec/etc/shared/default/agent.conf /var/ossec/etc/shared/default/agent.conf.orig
 sudo cp --no-clobber /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json  /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json.orig
-sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/cpe_helper.json
+sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/cpe_helper.json
 sudo mv cpe_helper.json /var/ossec/queue/vulnerabilities/dictionaries/cpe_helper.json
 # https://github.com/wazuh/wazuh/discussions/14731
-# https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
 sudo curl -sO https://raw.githubusercontent.com/branchnetconsulting/wazuh-tools/master/flush-vd-state
 sudo chmod u+x flush-vd-state
 sudo curl -sO https://raw.githubusercontent.com/jamieshield/coit11241/main/restartWazuh.sh
