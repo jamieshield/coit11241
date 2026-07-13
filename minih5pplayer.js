@@ -1,23 +1,26 @@
 /* MiniH5PPlayer v17++ (auto-size tokens; newline-safe; QS + robust detection with mainLibrary guard) */
-const MiniH5PPlayer = (() => {
-  const htmlDecode = (s) => { const ta = document.createElement('textarea'); ta.innerHTML = s ?? ''; return ta.value; };
-  const stripBOM = (s) => (s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s);
-  const asStr = (v) => (typeof v === 'string' || typeof v === 'number') ? String(v) : '';
+const MiniH5PPlayer = (function () {
+  const htmlDecode = function (s) { const ta = document.createElement('textarea'); ta.innerHTML = s ?? ''; return ta.value; };
+  const stripBOM = function (s) { return (s && s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s); }
+  const asStr = function (v) { return (typeof v === 'string' || typeof v === 'number') ? String(v) : ''; }
   const isArr = Array.isArray;
   const CR = String.fromCharCode(13), LF = String.fromCharCode(10);
   const LINE_SPLIT_RE = new RegExp('(?:' + CR + LF + '|' + CR + '|' + LF + ')');
-  const toPlainText = (html) => { const dec = htmlDecode(asStr(html)); 
+  /*const toPlainText = (html) => { const dec = htmlDecode(asStr(html)); 
 	return dec.replace(/<[^>]*>/g, ' ').replace(/\s+/g,' ').trim(); 
-  };
+  };*/
+  const toPlainText = function (html) { return html; }
 
   let __styled = false;
   function ensureStyles(){ if(__styled) return; __styled = true; const css = `
-    .card{border:1px solid #333;border-radius:8px;padding:14px;margin:10px 0;background:#000;color:#fff; position: relative}
+  
+  
+    .card{border:1px solid #333;border-radius:8px;padding:14px;margin:10px 0;background:#000;color:#fff; position: relative; }
     .card input, .card textarea, .card button{color:#000}
 	.card textarea { width: 100%; }
     .q-title{font-weight:700;margin-bottom:10px;color:#fff}
     .badge{background:#333;border:1px solid #555;border-radius:10px;padding:2px 8px;margin-right:6px;font-size:.85em;color:#ddd}
-    .inline-text{line-height:2}
+    .inline-text{line-height:1.1}
     .dropzone{display:inline-block;min-width:20ch;padding:2px 6px;margin:0 2px;border:2px dashed #888;background:rgba(255,255,255,.04);border-radius:6px;vertical-align:baseline;color:#fff}
     .dropzone.filled{border-color:#aaa;background:rgba(255,255,255,.08)}
     .dropzone.hover{outline:2px solid #66aaff;background:rgba(102,170,255,.15)}
@@ -125,18 +128,81 @@ function celebrateIfPerfect(root, correct, total){
   //if (Number(total) > 0 && Number(correct) === Number(total)) celebrate(root);
 }
 
-  function levenshtein(a,b){
+  /*function levenshtein(a,b){
 	  a=asStr(a);b=asStr(b);const m=a.length,n=b.length;if(!m) return n;if(!n) return m;const d=Array.from({length:m+1},()=>Array(n+1));for(let i=0;i<=m;i++)d[i][0]=i;for(let j=0;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++){for(let j=1;j<=n;j++){const c=a[i-1]===b[j-1]?0:1;d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+c);}}return d[m][n];}
+	  */
+	  function levenshtein(a, b) {
+
+    a = asStr(a);
+    b = asStr(b);
+
+    const m = a.length;
+    const n = b.length;
+
+    if (m === 0) {
+        return n;
+    }
+
+    if (n === 0) {
+        return m;
+    }
+
+    const d = [];
+
+    for (let i = 0; i !== m + 1; i++) {
+        d[i] = [];
+
+        for (let j = 0; j !== n + 1; j++) {
+            d[i][j] = 0;
+        }
+    }
+
+    for (let i = 0; i !== m + 1; i++) {
+        d[i][0] = i;
+    }
+
+    for (let j = 0; j !== n + 1; j++) {
+        d[0][j] = j;
+    }
+
+    for (let i = 1; i !== m + 1; i++) {
+
+        for (let j = 1; j !== n + 1; j++) {
+
+            const cost =
+                a.charAt(i - 1) === b.charAt(j - 1)
+                ? 0
+                : 1;
+
+            d[i][j] = Math.min(
+                d[i - 1][j] + 1,
+                d[i][j - 1] + 1,
+                d[i - 1][j - 1] + cost
+            );
+        }
+    }
+
+    return d[m][n];
+}
+
   //const norm=(s,cs)=> (cs?asStr(s).trim():asStr(s).trim().toLowerCase());
   const norm=function (s,cs) { return (cs?asStr(s).trim():asStr(s).trim().toLowerCase()); }
-  function appendTextWithBreaks(parent, s){ const parts = asStr(s).split(LINE_SPLIT_RE); for(let i=0;i<parts.length;i++){ if(i) parent.appendChild(document.createElement('br')); parent.appendChild(document.createTextNode(parts[i])); } }
+  /*function appendTextWithBreaks(parent, s){ const parts = asStr(s).split(LINE_SPLIT_RE); for(let i=0;i<parts.length;i++){ if(i) parent.appendChild(document.createElement('br')); parent.appendChild(document.createTextNode(parts[i])); } }*/
+  function appendTextWithBreaks(parent, s){
+    parent.insertAdjacentHTML('beforeend', asStr(s));
+  }
+
 
   function parseAsteriskBlanks(raw,{caseSensitive=false}={}){
     const decoded = htmlDecode(stripBOM(asStr(raw)));
     const candidate = (typeof raw === 'object' && raw) ? (raw.text || raw.value || '') : decoded;
     //const text = asStr(candidate).replace(/<[^>]+>/g,'');
-	const text = asStr(candidate).replace(/\x3C[^\x3E]+\x3E/g, '');
-    const segs=[],blanks=[]; let i=0,idx=0; const re=/\*([^*]+)\*/g; let m;
+	//const text = asStr(candidate).replace(/\x3C[^\x3E]+\x3E/g, '');
+	const text = asStr(candidate);
+    const segs=[],blanks=[]; let i=0,idx=0; 
+	//const re=/\*([^*]+)\*/g; 
+	var re = new RegExp("\\*([^*]+)\\*", "g");
+	let m;
     while((m=re.exec(text))!==null){ const start=m.index,end=re.lastIndex; if(start>i) segs.push({type:'text',text:text.slice(i,start)}); const alts=asStr(m[1]).split('/').map(s=>s.trim()).filter(Boolean); const id='blank_'+Date.now()+'_'+(idx++); segs.push({type:'blank',id,solutions:alts}); blanks.push({id,solutions:alts}); i=end; }
     if(i<text.length) segs.push({type:'text',text:text.slice(i)});
     const pool = blanks.map(b => asStr((b.solutions && b.solutions[0]) || ''));
@@ -152,7 +218,8 @@ function celebrateIfPerfect(root, correct, total){
     const decoded = htmlDecode(stripBOM(asStr(raw)));
     const text = asStr(decoded).replace(/<[^>]+>/g, '');
     const out = [];
-    const re = /\*([^*]+)\*/g;
+    //const re = /\*([^*]+)\*/g;
+	var re = new RegExp("\\*([^*]+)\\*", "g");
     let m;
     while ((m = re.exec(text)) !== null) {
       const tok = asStr(m[1]).split('/').map(s => s.trim()).filter(Boolean)[0];
